@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PMBM 口試練習站</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">NTU PMBM Oral Practice</p>
+          <h1>PMBM 口試練習站</h1>
+          <p class="hero-text">
+            主頁專注在題庫、短答與抽卡練習；模擬面試則獨立成專用頁面。
+            目標不是背稿，而是把答案練到短、穩、可收。
+          </p>
+          <div class="hero-actions">
+            <button class="primary-btn" id="jump-priority">先練優先 15 題</button>
+            <button class="ghost-btn" id="jump-flip">逐題翻牌練習</button>
+            <button class="ghost-btn" id="jump-mock">前往模擬面試頁</button>
+          </div>
+        </div>
+
+        <section class="hero-panel">
+          <h2>你的核心定位</h2>
+          <p id="core-positioning">
+            我不是以技術型生技人才的身分報考，而是以一個有理科基礎、正在往高度專業場域整合型管理者發展的人來報考 PMBM。
+          </p>
+          <ul class="micro-checklist">
+            <li>每題先講結論</li>
+            <li>一題只講一個主軸</li>
+            <li>教授點頭就收</li>
+            <li>誠實，但不要自爆</li>
+          </ul>
+        </section>
+      </header>
+
+      <main>
+        <section class="dashboard">
+          <article class="stat-card">
+            <span class="stat-label">總題數</span>
+            <strong class="stat-value" id="stat-total">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">優先 15 題</span>
+            <strong class="stat-value" id="stat-priority">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">已標記練過</span>
+            <strong class="stat-value" id="stat-practiced">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">今天建議</span>
+            <strong class="stat-value">先 5 題</strong>
+          </article>
+        </section>
+
+        <section class="control-bar">
+          <div class="tabs" id="view-tabs">
+            <button class="tab is-active" data-view="all">全部題庫</button>
+            <button class="tab" data-view="priority">優先 15 題</button>
+            <button class="tab" data-view="drill30">30 秒短答</button>
+            <button class="tab" data-view="followup">教授追問</button>
+          </div>
+
+          <div class="filters">
+            <label class="search-box">
+              <span>搜尋</span>
+              <input id="search-input" type="search" placeholder="例如：PMBA、SOP、挫折" />
+            </label>
+
+            <label class="select-box">
+              <span>類別</span>
+              <select id="category-filter">
+                <option value="all">全部</option>
+              </select>
+            </label>
+
+            <label class="select-box">
+              <span>重要度</span>
+              <select id="priority-filter">
+                <option value="all">全部</option>
+                <option value="高">高</option>
+                <option value="中">中</option>
+                <option value="低">低</option>
+              </select>
+            </label>
+
+            <button class="ghost-btn" id="random-question">抽一題練</button>
+          </div>
+        </section>
+
+        <section class="flip-section" id="flip-section">
+          <div class="section-heading">
+            <h2>逐題翻牌模式</h2>
+            <p>先看題目，自己先答，再決定要不要翻開短答、追問和提醒。</p>
+          </div>
+
+          <div class="flip-board">
+            <article class="flip-card-panel">
+              <div class="flip-card-topline">
+                <div class="pills">
+                  <span class="pill pill-category" id="flip-category">抽卡模式</span>
+                  <span class="pill pill-priority" id="flip-priority">準備中</span>
+                </div>
+                <span class="flip-round" id="flip-round">第 - 輪</span>
+              </div>
+
+              <div class="flip-card-stack">
+                <div class="flip-card-face flip-card-face--question">
+                  <span class="flip-label">題目面</span>
+                  <h3 id="flip-prompt">按下「抽下一題」開始。</h3>
+                  <p class="flip-meta" id="flip-answer-type">系統會優先從目前篩選結果抽題。</p>
+                </div>
+
+                <div class="flip-card-face" id="flip-answer-panel" hidden>
+                  <span class="flip-label">短答面</span>
+                  <p id="flip-short-answer">抽到題目後，先自己答 20 到 30 秒，再翻開參考答案。</p>
+                </div>
+
+                <div class="flip-card-face" id="flip-followup-panel" hidden>
+                  <span class="flip-label">追問面</span>
+                  <div id="flip-followup-list" class="followup-list"></div>
+                </div>
+              </div>
+
+              <div class="flip-actions">
+                <button class="primary-btn" id="flip-draw">抽下一題</button>
+                <button class="ghost-btn" id="flip-reveal-answer">翻短答</button>
+                <button class="ghost-btn" id="flip-reveal-followup">翻追問</button>
+                <button class="ghost-btn" id="flip-mark-practiced">標記已練</button>
+              </div>
+            </article>
+
+            <aside class="flip-side-panel">
+              <section class="coach-card">
+                <h2>抽卡規則</h2>
+                <ul class="micro-checklist">
+                  <li>先看題目，自己答 20 到 30 秒</li>
+                  <li>卡住再翻開短答</li>
+                  <li>答完主題，再翻追問練 15 秒補答</li>
+                  <li>可搭配上方搜尋與篩選一起抽題</li>
+                </ul>
+              </section>
+
+              <section class="coach-card">
+                <h2>目前抽卡來源</h2>
+                <p id="flip-source-hint">
+                  目前會依照你上方的搜尋、類別與重要度條件抽題；如果沒有條件，就從全部題庫中抽。
+                </p>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="mock-cta-section">
+          <article class="mock-cta-card">
+            <div>
+              <p class="eyebrow">Interview Cockpit</p>
+              <h2>模擬面試已從主頁拆出去</h2>
+              <p>
+                主頁現在只保留題庫、短答和抽卡練習。倒數、錄音、逐題問答與題組流程，都整合到專用的模擬面試頁，畫面會更乾淨、操作也更直覺。
+              </p>
+            </div>
+            <div class="mock-cta-actions">
+              <a class="primary-btn mock-link-btn" href="./mock-interview.html">打開模擬面試頁</a>
+              <p>適合考前反覆跑 20 到 30 分鐘完整練習。</p>
+            </div>
+          </article>
+        </section>
+
+        <section class="practice-layout">
+          <div class="question-column">
+            <div class="section-heading">
+              <h2 id="list-title">全部題庫</h2>
+              <p id="list-subtitle">先從高頻題開始，熟了再擴大範圍。</p>
+            </div>
+            <div class="question-grid" id="question-list"></div>
+          </div>
+
+          <aside class="coach-column">
+            <section class="coach-card sticky">
+              <h2>即時教練</h2>
+              <p>
+                把你想像成口試現場。每題先答 30 秒，再看追問。回答如果超過 60 秒，
+                大多就太長了。
+              </p>
+
+              <div class="coach-actions">
+                <button class="primary-btn" id="start-quick-drill">來一輪 5 題快練</button>
+                <button class="ghost-btn" id="clear-progress">清除練習標記</button>
+              </div>
+
+              <div class="quick-plan" id="quick-plan"></div>
+            </section>
+
+            <section class="coach-card">
+              <h2>上場前 1 分鐘</h2>
+              <ul class="micro-checklist">
+                <li>第一句直接回答，不鋪陳</li>
+                <li>先講結論，再補例子</li>
+                <li>不要說自己只是順便考 PMBM</li>
+                <li>把自己定位成整合型管理者</li>
+                <li>教授聽懂就收，不要自己加戲</li>
+              </ul>
+            </section>
+          </aside>
+        </section>
+
+      </main>
+    </div>
+
+    <template id="question-card-template">
+      <article class="question-card">
+        <div class="question-topline">
+          <div class="pills">
+            <span class="pill pill-category"></span>
+            <span class="pill pill-priority"></span>
+          </div>
+          <label class="practice-toggle">
+            <input type="checkbox" />
+            <span>已練</span>
+          </label>
+        </div>
+
+        <h3 class="question-title"></h3>
+        <p class="question-meta"></p>
+
+        <div class="answer-block">
+          <h4>答題主軸</h4>
+          <ul class="key-points"></ul>
+        </div>
+
+        <div class="answer-block answer-block--accent">
+          <h4>30 秒短答</h4>
+          <p class="short-answer"></p>
+        </div>
+
+        <details class="details-panel">
+          <summary>展開教授追問與提醒</summary>
+          <div class="followup-list"></div>
+          <div class="notes-wrap">
+            <label>我的練習筆記</label>
+            <textarea rows="4" placeholder="記下你容易卡住的地方"></textarea>
+          </div>
+        </details>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

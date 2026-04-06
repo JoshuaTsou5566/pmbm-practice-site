@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PMBM 模擬面試</title>
+    <link rel="stylesheet" href="./mock-interview.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Mock Interview</p>
+          <h1>PMBM 模擬面試控制台</h1>
+          <p class="lede">把題目、倒數、錄音和追問整合在同一頁。先答，再回聽，再修正。</p>
+        </div>
+        <a class="back-link" href="./index.html">回題庫主頁</a>
+      </header>
+
+      <main class="layout">
+        <section class="question-stage">
+          <div class="panel panel-hero">
+            <div class="stage-topline">
+              <div class="pills">
+                <span class="pill" id="stage-category">尚未開始</span>
+                <span class="pill pill-warm" id="stage-priority">待抽題</span>
+              </div>
+              <span class="progress" id="stage-progress">0 / 0</span>
+            </div>
+
+            <span class="prompt-label">教授正在問</span>
+            <h2 id="stage-prompt">先選一組題型，再按「建立 5 題模擬」。</h2>
+            <p class="stage-meta" id="stage-meta">建議先直接回答，不要先看參考答案。</p>
+
+            <div class="stage-actions">
+              <button class="primary-btn" id="build-queue">建立 5 題模擬</button>
+              <button class="ghost-btn" id="next-question">下一題</button>
+              <button class="ghost-btn" id="reveal-answer">看參考短答</button>
+              <button class="ghost-btn" id="reveal-followup">看教授追問</button>
+            </div>
+          </div>
+
+          <div class="mode-row">
+            <button class="mode-chip is-active" data-mode="mixed">綜合題組</button>
+            <button class="mode-chip" data-mode="motivation">動機定位</button>
+            <button class="mode-chip" data-mode="management">管理案例</button>
+            <button class="mode-chip" data-mode="challenge">挑戰追問</button>
+            <button class="mode-chip" data-mode="industry">時事產業</button>
+          </div>
+
+          <div class="panel reveal-panel" id="answer-panel" hidden>
+            <h3>參考短答</h3>
+            <p id="answer-text"></p>
+          </div>
+
+          <div class="panel reveal-panel" id="followup-panel" hidden>
+            <h3>教授可能追問</h3>
+            <div class="followup-list" id="followup-list"></div>
+          </div>
+        </section>
+
+        <aside class="control-stage">
+          <section class="panel cockpit-panel">
+            <div class="section-head">
+              <div>
+                <h3>答題工作台</h3>
+                <p class="panel-intro">把「開始作答」當成正式口試的起點，計時和錄音會一起進行。</p>
+              </div>
+              <label class="voice-toggle">
+                <input type="checkbox" id="voice-toggle" />
+                <span>語音提醒</span>
+              </label>
+            </div>
+
+            <div class="answer-flow">
+              <div class="flow-step">
+                <span>1</span>
+                <strong>抽到題目</strong>
+              </div>
+              <div class="flow-step">
+                <span>2</span>
+                <strong>開始作答</strong>
+              </div>
+              <div class="flow-step">
+                <span>3</span>
+                <strong>停止回聽</strong>
+              </div>
+            </div>
+
+            <div class="session-actions">
+              <button class="primary-btn session-btn" id="answer-start">開始作答</button>
+              <button class="ghost-btn session-btn" id="answer-stop">結束作答</button>
+            </div>
+
+            <div class="tool-status-grid">
+              <div class="status-card">
+                <span class="status-label">計時狀態</span>
+                <strong class="status-value" id="timer-status">待開始</strong>
+              </div>
+              <div class="status-card">
+                <span class="status-label">錄音狀態</span>
+                <strong class="status-value recorder-status-pill" id="record-pill">尚未錄音</strong>
+              </div>
+            </div>
+
+            <div class="timer-box">
+              <div class="timer-value" id="timer-value">00:45</div>
+              <div class="timer-banner" id="timer-banner">按下開始作答後，直接回答題目。</div>
+            </div>
+
+            <div class="timer-presets">
+              <button class="ghost-btn timer-preset is-active" data-seconds="45">45 秒</button>
+              <button class="ghost-btn timer-preset" data-seconds="30">30 秒</button>
+              <button class="ghost-btn timer-preset" data-seconds="60">60 秒</button>
+            </div>
+
+            <div class="tool-actions">
+              <div class="tool-group">
+                <span class="group-label">計時控制</span>
+                <div class="timer-actions">
+                  <button class="ghost-btn" id="timer-start">只開倒數</button>
+                  <button class="ghost-btn" id="timer-pause">暫停</button>
+                  <button class="ghost-btn" id="timer-reset">重設</button>
+                </div>
+              </div>
+
+              <div class="tool-group">
+                <span class="group-label">錄音控制</span>
+                <div class="recorder-actions">
+                  <button class="ghost-btn" id="record-start">只開錄音</button>
+                  <button class="ghost-btn" id="record-stop">停止</button>
+                  <button class="ghost-btn" id="record-play">播放</button>
+                  <button class="ghost-btn" id="record-clear">刪除</button>
+                </div>
+              </div>
+            </div>
+
+            <p class="recorder-status-text" id="record-status">先抽一題，再按「開始作答」。</p>
+
+            <div class="milestones">
+              <div class="milestone" id="mark-30">
+                <span>30 秒</span>
+                <strong>準備收斂</strong>
+              </div>
+              <div class="milestone" id="mark-45">
+                <span>45 秒</span>
+                <strong>現在收尾</strong>
+              </div>
+              <div class="milestone" id="mark-end">
+                <span>最後 5 秒</span>
+                <strong>一句話結尾</strong>
+              </div>
+            </div>
+
+            <div class="audio-wrap">
+              <div class="audio-hint" id="audio-hint">目前還沒有錄音檔。</div>
+              <audio id="record-audio" controls preload="metadata"></audio>
+            </div>
+          </section>
+
+          <section class="panel queue-panel">
+            <div class="section-head">
+              <h3>這輪題組</h3>
+              <span class="queue-meta">5 題</span>
+            </div>
+            <div class="queue-list" id="queue-list"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script src="./mock-interview.js"></script>
+  </body>
+</html>
