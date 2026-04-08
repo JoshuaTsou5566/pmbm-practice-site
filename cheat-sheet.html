@@ -24,40 +24,29 @@
       </header>
 
       <main>
-        <section class="sync-panel">
-          <article class="sync-card">
-            <div class="sync-head">
+        <section class="transfer-panel">
+          <article class="transfer-card">
+            <div class="transfer-head">
               <div>
-                <p class="eyebrow">Cloud Sync</p>
-                <h2>跨裝置同步</h2>
+                <p class="eyebrow">Record Transfer</p>
+                <h2>紀錄匯出與導入</h2>
               </div>
-              <span class="sync-badge" id="sync-badge">未設定</span>
+              <span class="transfer-badge" id="transfer-badge">本機模式</span>
             </div>
 
-            <p class="sync-text" id="sync-text">
-              先填入 Supabase 設定後，就能用同一組帳號在手機和電腦同步你的回答。
+            <p class="transfer-text" id="transfer-text">
+              在電腦輸入後可匯出紀錄檔，到手機打開同頁再導入；手機輸入後也可以反向匯出回電腦。
             </p>
 
-            <div class="auth-grid">
-              <label class="auth-field">
-                <span>Email</span>
-                <input id="auth-email" type="email" placeholder="you@example.com" />
-              </label>
-
-              <label class="auth-field">
-                <span>Password</span>
-                <input id="auth-password" type="password" placeholder="至少 6 碼" />
-              </label>
+            <div class="transfer-actions">
+              <button class="primary-btn" id="export-records" type="button">匯出紀錄</button>
+              <label class="ghost-btn import-btn" for="import-records">導入紀錄</label>
+              <input id="import-records" type="file" accept="application/json" hidden />
+              <button class="ghost-btn" id="clear-records" type="button">清空全部紀錄</button>
             </div>
 
-            <div class="auth-actions">
-              <button class="primary-btn" id="auth-signup" type="button">註冊</button>
-              <button class="ghost-btn" id="auth-signin" type="button">登入</button>
-              <button class="ghost-btn" id="auth-signout" type="button">登出</button>
-            </div>
-
-            <div class="setup-notice" id="setup-notice">
-              目前尚未填入 Supabase `url` 和 `anonKey`，所以還不能跨裝置同步。
+            <div class="transfer-notice" id="transfer-notice">
+              匯出檔案是 JSON 格式，建議放到 iCloud Drive、AirDrop、LINE Keep 或 Email，另一台再導入。
             </div>
           </article>
         </section>
@@ -108,7 +97,7 @@
         </section>
 
         <section class="save-hint">
-          <p>每題下方都有「我的回答」欄位，輸入後會自動儲存在這台裝置的瀏覽器裡。</p>
+          <p>每題下方都有「我的回答」欄位，按下各題的「儲存」才會寫入本機；需要跨裝置時再用上方匯出 / 導入。</p>
         </section>
 
         <section class="quick-notes">
@@ -133,10 +122,7 @@
         <section class="sheet-list" id="sheet-list"></section>
       </main>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./question-data.js"></script>
-    <script src="./supabase-config.js"></script>
     <script src="./cheat-sheet.js"></script>
   </body>
 </html>

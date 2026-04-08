@@ -1,5 +1,5 @@
+const STORAGE_KEY = "pmbm-cheat-sheet-records-v2";
 const bank = Array.isArray(window.PMBM_QUESTION_BANK) ? window.PMBM_QUESTION_BANK : [];
-const config = window.PMBM_SUPABASE_CONFIG || {};
 
 const els = {
   statTotal: document.querySelector("#stat-total"),
@@ -11,29 +11,40 @@ const els = {
   expandAll: document.querySelector("#expand-all"),
   collapseAll: document.querySelector("#collapse-all"),
   onlyHigh: document.querySelector("#only-high"),
-  sheetList: document.querySelector("#sheet-list"),
-  syncBadge: document.querySelector("#sync-badge"),
-  syncText: document.querySelector("#sync-text"),
-  setupNotice: document.querySelector("#setup-notice"),
-  authEmail: document.querySelector("#auth-email"),
-  authPassword: document.querySelector("#auth-password"),
-  authSignup: document.querySelector("#auth-signup"),
-  authSignin: document.querySelector("#auth-signin"),
-  authSignout: document.querySelector("#auth-signout")
+  exportRecords: document.querySelector("#export-records"),
+  importRecords: document.querySelector("#import-records"),
+  clearRecords: document.querySelector("#clear-records"),
+  transferBadge: document.querySelector("#transfer-badge"),
+  transferText: document.querySelector("#transfer-text"),
+  transferNotice: document.querySelector("#transfer-notice"),
+  sheetList: document.querySelector("#sheet-list")
 };
 
 const state = {
   query: "",
   category: "all",
   priority: "all",
-  answers: {},
-  session: null,
-  supabase: null,
-  syncReady: false
+  answers: {}
 };
 
-function isConfigured() {
-  return Boolean(config.url && config.anonKey && window.supabase?.createClient);
+function loadAnswers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    state.answers = raw ? JSON.parse(raw) : {};
+  } catch (_) {
+    state.answers = {};
+  }
+}
+
+function persistAnswers() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.answers));
+}
+
+function setTransferState(label, text, tone = "normal") {
+  els.transferBadge.textContent = label;
+  els.transferText.textContent = text;
+  els.transferBadge.classList.remove("is-ready");
+  if (tone === "ready") els.transferBadge.classList.add("is-ready");
 }
 
 function populateCategories() {
@@ -59,6 +70,7 @@ function getVisibleQuestions() {
       item.shortAnswer,
       ...item.keyPoints,
       item.coachNote,
+      state.answers[item.id] || "",
       ...item.followUps.flatMap((entry) => [entry.question || entry, entry.answer || ""])
     ]
       .join(" ")
@@ -86,141 +98,49 @@ function createFollowupCard(item) {
   return card;
 }
 
-function setSyncState(label, text, tone = "normal") {
-  els.syncBadge.textContent = label;
-  els.syncText.textContent = text;
-  els.syncBadge.classList.remove("is-ready", "is-live");
-  if (tone === "ready") els.syncBadge.classList.add("is-ready");
-  if (tone === "live") els.syncBadge.classList.add("is-live");
-}
-
-function renderAuthState() {
-  const configured = isConfigured();
-  const signedIn = Boolean(state.session?.user);
-
-  els.authSignup.disabled = !configured || signedIn;
-  els.authSignin.disabled = !configured || signedIn;
-  els.authSignout.disabled = !configured || !signedIn;
-  els.authEmail.disabled = !configured || signedIn;
-  els.authPassword.disabled = !configured || signedIn;
-  els.setupNotice.hidden = configured;
-
-  if (!configured) {
-    setSyncState("未設定", "先填入 Supabase 設定後，才能用帳號同步手機和電腦的回答。");
-    return;
-  }
-
-  if (signedIn) {
-    setSyncState("已同步", `目前登入：${state.session.user.email || "已登入"}。儲存後，手機與電腦會同步。`, "live");
-  } else {
-    setSyncState("可登入", "請先註冊或登入，再使用每題的儲存 / 刪除功能。", "ready");
-  }
-}
-
 function setAnswerStatus(questionId, text) {
   const node = document.querySelector(`[data-status-id="${questionId}"]`);
   if (node) node.textContent = text;
 }
 
-function getAnswerValue(questionId) {
-  const textarea = document.querySelector(`[data-answer-id="${questionId}"]`);
-  return textarea ? textarea.value.trim() : "";
-}
-
-function getQuestionDetails(questionId) {
+function getQuestionNodes(questionId) {
   return {
+    textarea: document.querySelector(`[data-answer-id="${questionId}"]`),
     saveBtn: document.querySelector(`[data-save-id="${questionId}"]`),
-    deleteBtn: document.querySelector(`[data-delete-id="${questionId}"]`),
-    textarea: document.querySelector(`[data-answer-id="${questionId}"]`)
+    deleteBtn: document.querySelector(`[data-delete-id="${questionId}"]`)
   };
 }
 
 function updateQuestionControls(questionId) {
-  const { saveBtn, deleteBtn, textarea } = getQuestionDetails(questionId);
-  const signedIn = Boolean(state.session?.user);
-  const hasSavedValue = Boolean(state.answers[questionId]);
-
-  if (textarea) textarea.disabled = !signedIn;
-  if (saveBtn) saveBtn.disabled = !signedIn;
-  if (deleteBtn) deleteBtn.disabled = !signedIn || !hasSavedValue;
+  const { saveBtn, deleteBtn } = getQuestionNodes(questionId);
+  const hasSaved = Boolean(state.answers[questionId]?.trim());
+  if (saveBtn) saveBtn.disabled = false;
+  if (deleteBtn) deleteBtn.disabled = !hasSaved;
 }
 
-function updateAllQuestionControls() {
-  bank.forEach((item) => updateQuestionControls(item.id));
-}
+function saveAnswer(questionId) {
+  const { textarea } = getQuestionNodes(questionId);
+  const value = textarea ? textarea.value.trim() : "";
 
-async function fetchAnswers() {
-  if (!state.supabase || !state.session?.user) {
-    state.answers = {};
-    renderList();
+  if (!value) {
+    setAnswerStatus(questionId, "內容是空的，請先輸入後再儲存。");
     return;
   }
 
-  const { data, error } = await state.supabase
-    .from(config.answersTable || "interview_answers")
-    .select("question_id, answer_text");
-
-  if (error) {
-    setSyncState("同步失敗", "已登入，但讀取回答時發生錯誤，請確認 Supabase table 和 RLS 設定。");
-    return;
-  }
-
-  state.answers = Object.fromEntries((data || []).map((row) => [row.question_id, row.answer_text]));
-  renderList();
-  renderAuthState();
-}
-
-async function saveAnswer(questionId) {
-  if (!state.supabase || !state.session?.user) return;
-  const answerText = getAnswerValue(questionId);
-
-  if (!answerText) {
-    setAnswerStatus(questionId, "內容是空的，請先輸入回答再儲存。");
-    return;
-  }
-
-  setAnswerStatus(questionId, "儲存中...");
-
-  const { error } = await state.supabase
-    .from(config.answersTable || "interview_answers")
-    .upsert(
-      {
-        user_id: state.session.user.id,
-        question_id: questionId,
-        answer_text: answerText
-      },
-      { onConflict: "user_id,question_id" }
-    );
-
-  if (error) {
-    setAnswerStatus(questionId, "儲存失敗，請確認 Supabase table / policy 設定。");
-    return;
-  }
-
-  state.answers[questionId] = answerText;
+  state.answers[questionId] = value;
+  persistAnswers();
   updateQuestionControls(questionId);
-  setAnswerStatus(questionId, "已儲存到雲端。");
+  setAnswerStatus(questionId, "已儲存到這台裝置。");
+  setTransferState("本機模式", "目前回答存在這台裝置；需要跨裝置時，請用上方匯出 / 導入。");
 }
 
-async function deleteAnswer(questionId) {
-  if (!state.supabase || !state.session?.user) return;
-  setAnswerStatus(questionId, "刪除中...");
-
-  const { error } = await state.supabase
-    .from(config.answersTable || "interview_answers")
-    .delete()
-    .eq("question_id", questionId);
-
-  if (error) {
-    setAnswerStatus(questionId, "刪除失敗，請稍後再試。");
-    return;
-  }
-
+function deleteAnswer(questionId) {
   delete state.answers[questionId];
-  const { textarea } = getQuestionDetails(questionId);
+  persistAnswers();
+  const { textarea } = getQuestionNodes(questionId);
   if (textarea) textarea.value = "";
   updateQuestionControls(questionId);
-  setAnswerStatus(questionId, "已從雲端刪除。");
+  setAnswerStatus(questionId, "已從這台裝置刪除。");
 }
 
 function renderList() {
@@ -239,8 +159,8 @@ function renderList() {
   visible.forEach((item) => {
     const details = document.createElement("details");
     details.className = "sheet-card";
-
     const priorityClass = item.priority === "高" ? "priority-high" : "";
+
     details.innerHTML = `
       <summary class="sheet-summary">
         <div>
@@ -279,7 +199,7 @@ function renderList() {
               <button class="primary-btn" data-save-id="${item.id}" type="button">儲存</button>
               <button class="ghost-btn" data-delete-id="${item.id}" type="button">刪除</button>
             </div>
-            <span class="save-status-row" data-status-id="${item.id}">尚未登入，無法同步。</span>
+            <span class="save-status-row" data-status-id="${item.id}">尚未儲存。</span>
           </div>
         </section>
       </div>
@@ -308,16 +228,16 @@ function renderList() {
     textarea.value = state.answers[item.id] || "";
 
     details.querySelector(`[data-save-id="${item.id}"]`).addEventListener("click", () => {
-      void saveAnswer(item.id);
+      saveAnswer(item.id);
     });
 
     details.querySelector(`[data-delete-id="${item.id}"]`).addEventListener("click", () => {
-      void deleteAnswer(item.id);
+      deleteAnswer(item.id);
     });
 
     els.sheetList.append(details);
     updateQuestionControls(item.id);
-    setAnswerStatus(item.id, state.session?.user ? (state.answers[item.id] ? "已載入雲端回答。" : "可編輯，按儲存即可同步。") : "尚未登入，無法同步。");
+    setAnswerStatus(item.id, state.answers[item.id] ? "已載入這台裝置上的紀錄。" : "尚未儲存。");
   });
 }
 
@@ -334,52 +254,56 @@ function setAllDetails(open) {
   });
 }
 
-async function handleSignUp() {
-  if (!state.supabase) return;
-  const email = els.authEmail.value.trim();
-  const password = els.authPassword.value.trim();
-  if (!email || !password) {
-    setSyncState("缺少資料", "請先填入 Email 和 Password。");
-    return;
-  }
+function exportRecords() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    source: "PMBM Cheat Sheet",
+    answers: state.answers
+  };
 
-  const { error } = await state.supabase.auth.signUp({ email, password });
-  if (error) {
-    setSyncState("註冊失敗", error.message);
-    return;
-  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  link.href = url;
+  link.download = `pmbm-records-${stamp}.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 
-  setSyncState("已送出", "註冊成功。如果你的 Supabase 有開 email confirmation，請先到信箱確認，再登入。", "ready");
+  setTransferState("可交換", "紀錄已匯出成 JSON。把檔案傳到另一台裝置後，再用導入紀錄即可。", "ready");
 }
 
-async function handleSignIn() {
-  if (!state.supabase) return;
-  const email = els.authEmail.value.trim();
-  const password = els.authPassword.value.trim();
-  if (!email || !password) {
-    setSyncState("缺少資料", "請先填入 Email 和 Password。");
-    return;
-  }
+function importRecordsFromFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || "{}"));
+      const answers = parsed.answers;
+      if (!answers || typeof answers !== "object") {
+        throw new Error("Invalid payload");
+      }
 
-  const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    setSyncState("登入失敗", error.message);
-    return;
-  }
-
-  state.session = data.session;
-  els.authPassword.value = "";
-  renderAuthState();
-  await fetchAnswers();
+      state.answers = Object.fromEntries(
+        Object.entries(answers).filter(([, value]) => typeof value === "string" && value.trim())
+      );
+      persistAnswers();
+      renderList();
+      setTransferState("已導入", "紀錄已導入到這台裝置。之後你可以繼續修改，再重新匯出。", "ready");
+    } catch (_) {
+      setTransferState("導入失敗", "這個檔案格式不正確，請確認你導入的是本頁匯出的 JSON 紀錄。");
+    }
+  };
+  reader.readAsText(file, "utf-8");
 }
 
-async function handleSignOut() {
-  if (!state.supabase) return;
-  await state.supabase.auth.signOut();
-  state.session = null;
+function clearAllRecords() {
   state.answers = {};
-  renderAuthState();
+  persistAnswers();
   renderList();
+  setTransferState("已清空", "這台裝置上的全部回答已清空，不會影響你已匯出的檔案。", "ready");
 }
 
 function attachEvents() {
@@ -399,59 +323,24 @@ function attachEvents() {
     renderList();
   });
 
-  els.expandAll.addEventListener("click", () => {
-    setAllDetails(true);
-  });
-
-  els.collapseAll.addEventListener("click", () => {
-    setAllDetails(false);
-  });
-
+  els.expandAll.addEventListener("click", () => setAllDetails(true));
+  els.collapseAll.addEventListener("click", () => setAllDetails(false));
   els.onlyHigh.addEventListener("click", setOnlyHigh);
-  els.authSignup.addEventListener("click", () => {
-    void handleSignUp();
+  els.exportRecords.addEventListener("click", exportRecords);
+  els.importRecords.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    importRecordsFromFile(file);
+    event.target.value = "";
   });
-  els.authSignin.addEventListener("click", () => {
-    void handleSignIn();
-  });
-  els.authSignout.addEventListener("click", () => {
-    void handleSignOut();
-  });
+  els.clearRecords.addEventListener("click", clearAllRecords);
 }
 
-async function initSupabase() {
-  if (!isConfigured()) {
-    renderAuthState();
-    return;
-  }
-
-  state.supabase = window.supabase.createClient(config.url, config.anonKey);
-  state.syncReady = true;
-
-  const {
-    data: { session }
-  } = await state.supabase.auth.getSession();
-
-  state.session = session;
-  renderAuthState();
-
-  state.supabase.auth.onAuthStateChange((_event, sessionData) => {
-    state.session = sessionData;
-    renderAuthState();
-    void fetchAnswers();
-  });
-
-  if (session) {
-    await fetchAnswers();
-  }
-}
-
-async function init() {
+function init() {
+  loadAnswers();
   populateCategories();
   renderList();
   attachEvents();
-  renderAuthState();
-  await initSupabase();
+  setTransferState("本機模式", "你的回答先存在這台裝置；需要跨裝置時，用上方匯出 / 導入即可。");
 }
 
-void init();
+init();
