@@ -24,8 +24,12 @@ const state = {
   query: "",
   category: "all",
   priority: "all",
-  answers: {}
+  answers: {},
+  activeVoiceQuestionId: null,
+  recognition: null
 };
+
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
 function loadAnswers() {
   try {
@@ -113,9 +117,16 @@ function getQuestionNodes(questionId) {
 
 function updateQuestionControls(questionId) {
   const { saveBtn, deleteBtn } = getQuestionNodes(questionId);
+  const voiceBtn = document.querySelector(`[data-voice-id="${questionId}"]`);
   const hasSaved = Boolean(state.answers[questionId]?.trim());
   if (saveBtn) saveBtn.disabled = false;
   if (deleteBtn) deleteBtn.disabled = !hasSaved;
+  if (voiceBtn) {
+    const supported = Boolean(SpeechRecognitionCtor);
+    voiceBtn.disabled = !supported;
+    voiceBtn.classList.toggle("is-recording", state.activeVoiceQuestionId === questionId);
+    voiceBtn.textContent = state.activeVoiceQuestionId === questionId ? "停止語音輸入" : "語音輸入";
+  }
 }
 
 function saveAnswer(questionId) {
@@ -141,6 +152,90 @@ function deleteAnswer(questionId) {
   if (textarea) textarea.value = "";
   updateQuestionControls(questionId);
   setAnswerStatus(questionId, "已從這台裝置刪除。");
+}
+
+function appendToTextarea(questionId, text) {
+  const { textarea } = getQuestionNodes(questionId);
+  if (!textarea) return;
+  const prefix = textarea.value.trim() ? `${textarea.value.trim()}\n` : "";
+  textarea.value = `${prefix}${text}`.trim();
+}
+
+function stopVoiceInput() {
+  if (state.recognition) {
+    state.recognition.stop();
+  }
+}
+
+function startVoiceInput(questionId) {
+  if (!SpeechRecognitionCtor) {
+    setAnswerStatus(questionId, "這個瀏覽器目前不支援內建語音輸入。");
+    return;
+  }
+
+  if (state.activeVoiceQuestionId === questionId) {
+    stopVoiceInput();
+    return;
+  }
+
+  if (state.recognition) {
+    state.recognition.abort();
+  }
+
+  const recognition = new SpeechRecognitionCtor();
+  recognition.lang = "zh-TW";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  const { textarea } = getQuestionNodes(questionId);
+  const baseText = textarea ? textarea.value.trim() : "";
+  let finalTranscript = "";
+  state.activeVoiceQuestionId = questionId;
+  state.recognition = recognition;
+  updateQuestionControls(questionId);
+  setAnswerStatus(questionId, "語音輸入中，說完後再按一次停止。");
+
+  recognition.onresult = (event) => {
+    let interimTranscript = "";
+    for (let i = event.resultIndex; i < event.results.length; i += 1) {
+      const transcript = event.results[i][0].transcript.trim();
+      if (event.results[i].isFinal) {
+        finalTranscript += `${transcript}\n`;
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+
+    const composed = `${finalTranscript}${interimTranscript}`.trim();
+    const merged = [baseText, composed].filter(Boolean).join("\n").trim();
+    const { textarea } = getQuestionNodes(questionId);
+    if (textarea) {
+      textarea.value = merged;
+    }
+  };
+
+  recognition.onerror = () => {
+    setAnswerStatus(questionId, "語音輸入失敗，請改用手動輸入或換支援的瀏覽器。");
+  };
+
+  recognition.onend = () => {
+    const finalText = finalTranscript.trim();
+    if (finalText) {
+      const { textarea } = getQuestionNodes(questionId);
+      if (textarea) {
+        textarea.value = [baseText, finalText].filter(Boolean).join("\n").trim();
+      }
+      setAnswerStatus(questionId, "語音輸入完成，記得按儲存。");
+    } else {
+      setAnswerStatus(questionId, "語音輸入已停止。");
+    }
+
+    state.activeVoiceQuestionId = null;
+    state.recognition = null;
+    bank.forEach((item) => updateQuestionControls(item.id));
+  };
+
+  recognition.start();
 }
 
 function renderList() {
@@ -197,6 +292,7 @@ function renderList() {
             <label for="answer-${item.id}">我的回答</label>
             <textarea id="answer-${item.id}" data-answer-id="${item.id}" placeholder="先寫你的版本，再按儲存。"></textarea>
             <div class="answer-actions">
+              <button class="ghost-btn voice-btn" data-voice-id="${item.id}" type="button">語音輸入</button>
               <button class="primary-btn" data-save-id="${item.id}" type="button">儲存</button>
               <button class="ghost-btn" data-delete-id="${item.id}" type="button">刪除</button>
             </div>
@@ -247,6 +343,11 @@ function renderList() {
     details.querySelector(`[data-save-id="${item.id}"]`).addEventListener("click", (event) => {
       event.stopPropagation();
       saveAnswer(item.id);
+    });
+
+    details.querySelector(`[data-voice-id="${item.id}"]`).addEventListener("click", (event) => {
+      event.stopPropagation();
+      startVoiceInput(item.id);
     });
 
     details.querySelector(`[data-delete-id="${item.id}"]`).addEventListener("click", (event) => {

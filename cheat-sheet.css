@@ -461,6 +461,12 @@ h1 {
   margin-top: -2px;
 }
 
+.voice-btn.is-recording {
+  background: rgba(188, 90, 72, 0.16);
+  color: #8a3021;
+  border-color: rgba(188, 90, 72, 0.22);
+}
+
 .empty-state {
   padding: 24px;
   border-radius: 24px;
