@@ -17,6 +17,7 @@ const els = {
   transferBadge: document.querySelector("#transfer-badge"),
   transferText: document.querySelector("#transfer-text"),
   transferNotice: document.querySelector("#transfer-notice"),
+  mnemonicGrid: document.querySelector("#mnemonic-grid"),
   sheetList: document.querySelector("#sheet-list")
 };
 
@@ -30,6 +31,33 @@ const state = {
 };
 
 const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+const CATEGORY_MNEMONICS = {
+  "必答核心題": {
+    code: "動機-能力-連結",
+    hint: "先說你是誰，再講為什麼來 PMBM，最後收回你能帶來什麼。"
+  },
+  "高機率挑戰題": {
+    code: "先認-再轉-再收",
+    hint: "先承認表面弱點，再轉成你的定位優勢，最後收回為什麼還是適合 PMBM。"
+  },
+  "管理經驗追問題": {
+    code: "情境-動作-結果",
+    hint: "管理題不要講抽象個性，直接講你怎麼做、做了什麼、結果如何。"
+  },
+  "PMBM 理解題": {
+    code: "理解-對位-應用",
+    hint: "先講你怎麼理解學程，再講和自己缺口的對位，最後講未來怎麼用。"
+  },
+  "時事與產業題": {
+    code: "趨勢-限制-落地",
+    hint: "先講方向，再補風險或限制，最後講管理或商業化上的落地點。"
+  },
+  "臨場反應題": {
+    code: "短答-真誠-不飄",
+    hint: "這類題目要短，先給立場，不要講太滿，也不要故作幽默。"
+  }
+};
 
 function loadAnswers() {
   try {
@@ -58,6 +86,37 @@ function populateCategories() {
     option.value = category;
     option.textContent = category;
     els.categoryFilter.append(option);
+  });
+}
+
+function groupQuestions(questions) {
+  const order = [...new Set(bank.map((item) => item.category))];
+  return order
+    .map((category) => ({
+      category,
+      items: questions.filter((item) => item.category === category)
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
+function renderMnemonicBoard(groups) {
+  if (!els.mnemonicGrid) return;
+  els.mnemonicGrid.innerHTML = "";
+
+  groups.forEach((group) => {
+    const config = CATEGORY_MNEMONICS[group.category] || {
+      code: "結論-例子-收尾",
+      hint: "先講結論，再補一個例子，最後收回對 PMBM 的連結。"
+    };
+
+    const card = document.createElement("article");
+    card.className = "mnemonic-card";
+    card.innerHTML = `
+      <h3>${group.category}</h3>
+      <span class="mnemonic-code">${config.code}</span>
+      <p>${config.hint}</p>
+    `;
+    els.mnemonicGrid.append(card);
   });
 }
 
@@ -240,7 +299,9 @@ function startVoiceInput(questionId) {
 
 function renderList() {
   const visible = getVisibleQuestions();
+  const groups = groupQuestions(visible);
   renderStats(visible);
+  renderMnemonicBoard(groups);
   els.sheetList.innerHTML = "";
 
   if (!visible.length) {
@@ -251,12 +312,26 @@ function renderList() {
     return;
   }
 
-  visible.forEach((item) => {
-    const details = document.createElement("details");
-    details.className = "sheet-card";
-    const priorityClass = item.priority === "高" ? "priority-high" : "";
+  groups.forEach((group) => {
+    const block = document.createElement("section");
+    block.className = "group-block";
+    const mnemonic = CATEGORY_MNEMONICS[group.category];
+    block.innerHTML = `
+      <div class="group-title">
+        <div>
+          <h2>${group.category}</h2>
+          <p>${mnemonic ? `口訣：${mnemonic.code}。${mnemonic.hint}` : "同類型題目放一起，先記骨架再記例子。"}</p>
+        </div>
+        <span class="group-count">${group.items.length} 題</span>
+      </div>
+    `;
 
-    details.innerHTML = `
+    group.items.forEach((item) => {
+      const details = document.createElement("details");
+      details.className = "sheet-card";
+      const priorityClass = item.priority === "高" ? "priority-high" : "";
+
+      details.innerHTML = `
       <summary class="sheet-summary">
         <div>
           <div class="pill-row">
@@ -302,62 +377,65 @@ function renderList() {
       </div>
     `;
 
-    const keyPoints = details.querySelector(".key-points");
-    const hintRow = details.querySelector(".hint-row");
-    item.keyPoints.forEach((point) => {
-      const li = document.createElement("li");
-      li.textContent = point;
-      keyPoints.append(li);
+      const keyPoints = details.querySelector(".key-points");
+      const hintRow = details.querySelector(".hint-row");
+      item.keyPoints.forEach((point) => {
+        const li = document.createElement("li");
+        li.textContent = point;
+        keyPoints.append(li);
 
-      const hint = document.createElement("span");
-      hint.className = "hint-chip";
-      hint.textContent = point;
-      hintRow.append(hint);
-    });
-
-    const followupGrid = details.querySelector(".followup-grid");
-    if (item.followUps.length) {
-      item.followUps.forEach((entry) => {
-        followupGrid.append(createFollowupCard(entry));
+        const hint = document.createElement("span");
+        hint.className = "hint-chip";
+        hint.textContent = point;
+        hintRow.append(hint);
       });
-    } else {
-      const fallback = document.createElement("article");
-      fallback.className = "followup-card";
-      fallback.innerHTML = `<strong>教練補充</strong><p>${item.coachNote}</p>`;
-      followupGrid.append(fallback);
-    }
 
-    const textarea = details.querySelector(`[data-answer-id="${item.id}"]`);
-    textarea.value = state.answers[item.id] || "";
-    textarea.addEventListener("click", (event) => {
-      event.stopPropagation();
-      details.open = true;
-    });
-    textarea.addEventListener("focus", () => {
-      details.open = true;
-    });
-    textarea.addEventListener("keydown", (event) => {
-      event.stopPropagation();
+      const followupGrid = details.querySelector(".followup-grid");
+      if (item.followUps.length) {
+        item.followUps.forEach((entry) => {
+          followupGrid.append(createFollowupCard(entry));
+        });
+      } else {
+        const fallback = document.createElement("article");
+        fallback.className = "followup-card";
+        fallback.innerHTML = `<strong>教練補充</strong><p>${item.coachNote}</p>`;
+        followupGrid.append(fallback);
+      }
+
+      const textarea = details.querySelector(`[data-answer-id="${item.id}"]`);
+      textarea.value = state.answers[item.id] || "";
+      textarea.addEventListener("click", (event) => {
+        event.stopPropagation();
+        details.open = true;
+      });
+      textarea.addEventListener("focus", () => {
+        details.open = true;
+      });
+      textarea.addEventListener("keydown", (event) => {
+        event.stopPropagation();
+      });
+
+      details.querySelector(`[data-save-id="${item.id}"]`).addEventListener("click", (event) => {
+        event.stopPropagation();
+        saveAnswer(item.id);
+      });
+
+      details.querySelector(`[data-voice-id="${item.id}"]`).addEventListener("click", (event) => {
+        event.stopPropagation();
+        startVoiceInput(item.id);
+      });
+
+      details.querySelector(`[data-delete-id="${item.id}"]`).addEventListener("click", (event) => {
+        event.stopPropagation();
+        deleteAnswer(item.id);
+      });
+
+      block.append(details);
+      updateQuestionControls(item.id);
+      setAnswerStatus(item.id, state.answers[item.id] ? "已載入這台裝置上的紀錄。" : "尚未儲存。");
     });
 
-    details.querySelector(`[data-save-id="${item.id}"]`).addEventListener("click", (event) => {
-      event.stopPropagation();
-      saveAnswer(item.id);
-    });
-
-    details.querySelector(`[data-voice-id="${item.id}"]`).addEventListener("click", (event) => {
-      event.stopPropagation();
-      startVoiceInput(item.id);
-    });
-
-    details.querySelector(`[data-delete-id="${item.id}"]`).addEventListener("click", (event) => {
-      event.stopPropagation();
-      deleteAnswer(item.id);
-    });
-
-    els.sheetList.append(details);
-    updateQuestionControls(item.id);
-    setAnswerStatus(item.id, state.answers[item.id] ? "已載入這台裝置上的紀錄。" : "尚未儲存。");
+    els.sheetList.append(block);
   });
 }
 

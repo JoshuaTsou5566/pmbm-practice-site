@@ -129,6 +129,7 @@ h1 {
 .summary-card,
 .control-panel,
 .transfer-card,
+.mnemonic-panel,
 .save-hint,
 .note-card,
 .sheet-card {
@@ -237,6 +238,86 @@ h1 {
   margin: 0;
   color: var(--ink-soft);
   line-height: 1.72;
+}
+
+.mnemonic-panel {
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.section-title p {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  line-height: 1.72;
+}
+
+.mnemonic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.mnemonic-card {
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 248, 239, 0.84);
+  border: 1px solid rgba(23, 50, 77, 0.08);
+}
+
+.mnemonic-card h3 {
+  font-size: 1rem;
+  color: var(--navy);
+}
+
+.mnemonic-code {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin-top: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(44, 107, 116, 0.12);
+  color: var(--navy);
+  font-size: 0.82rem;
+}
+
+.mnemonic-card p {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+
+.group-block + .group-block {
+  margin-top: 18px;
+}
+
+.group-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.group-title p {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  line-height: 1.68;
+}
+
+.group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 248, 239, 0.92);
+  border: 1px solid rgba(23, 50, 77, 0.08);
+  color: var(--navy);
+  font-size: 0.82rem;
 }
 
 .search-box,
@@ -480,6 +561,7 @@ h1 {
   .hero,
   .summary-strip,
   .quick-notes,
+  .mnemonic-grid,
   .control-panel {
     grid-template-columns: 1fr;
     display: grid;
