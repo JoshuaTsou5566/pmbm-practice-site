@@ -1,4 +1,5 @@
 const bank = Array.isArray(window.PMBM_QUESTION_BANK) ? window.PMBM_QUESTION_BANK : [];
+const STORAGE_KEY = "pmbm-cheat-sheet-notes-v1";
 
 const els = {
   statTotal: document.querySelector("#stat-total"),
@@ -16,8 +17,30 @@ const els = {
 const state = {
   query: "",
   category: "all",
-  priority: "all"
+  priority: "all",
+  answers: {}
 };
+
+function loadAnswers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      state.answers = parsed;
+    }
+  } catch (_) {
+    state.answers = {};
+  }
+}
+
+function saveAnswers() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.answers));
+  } catch (_) {
+    // ignore storage issues
+  }
+}
 
 function populateCategories() {
   const categories = [...new Set(bank.map((item) => item.category))];
@@ -117,6 +140,13 @@ function renderList() {
           <h4>答題提醒</h4>
           <p>${item.coachNote}</p>
         </section>
+        <section class="section-block">
+          <div class="answer-editor">
+            <label for="answer-${item.id}">我的回答</label>
+            <textarea id="answer-${item.id}" data-answer-id="${item.id}" placeholder="把你自己的版本寫在這裡，系統會自動儲存。"></textarea>
+            <span class="save-status">會自動儲存到這台裝置的瀏覽器。</span>
+          </div>
+        </section>
       </div>
     `;
 
@@ -138,6 +168,13 @@ function renderList() {
       fallback.innerHTML = `<strong>教練補充</strong><p>${item.coachNote}</p>`;
       followupGrid.append(fallback);
     }
+
+    const textarea = details.querySelector(`[data-answer-id="${item.id}"]`);
+    textarea.value = state.answers[item.id] || "";
+    textarea.addEventListener("input", () => {
+      state.answers[item.id] = textarea.value;
+      saveAnswers();
+    });
 
     els.sheetList.append(details);
   });
@@ -185,6 +222,7 @@ function attachEvents() {
 }
 
 function init() {
+  loadAnswers();
   populateCategories();
   renderList();
   attachEvents();
