@@ -120,7 +120,25 @@ function renderMnemonicBoard(groups) {
   });
 }
 
+function strategyHaystack() {
+  return [
+    "π型人才",
+    "跨專長",
+    "跨領域整合",
+    "第一關 學程主任 動機 適配性",
+    "第二關 管院教授 管理思維 制度化",
+    "第三關 進修推廣 PM 實務連結 未來應用",
+    "跨域轉譯",
+    "流程制度化",
+    "SOP 與授權",
+    "治理與風險"
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
 function getVisibleQuestions() {
+  const strategyText = strategyHaystack();
   return bank.filter((item) => {
     if (state.category !== "all" && item.category !== state.category) return false;
     if (state.priority !== "all" && item.priority !== state.priority) return false;
@@ -138,7 +156,7 @@ function getVisibleQuestions() {
     ]
       .join(" ")
       .toLowerCase();
-    return haystack.includes(state.query);
+    return haystack.includes(state.query) || strategyText.includes(state.query);
   });
 }
 

@@ -130,6 +130,7 @@ h1 {
 .control-panel,
 .transfer-card,
 .mnemonic-panel,
+.strategy-panel,
 .save-hint,
 .note-card,
 .sheet-card {
@@ -245,6 +246,11 @@ h1 {
   padding: 18px;
 }
 
+.strategy-panel {
+  margin-top: 18px;
+  padding: 18px;
+}
+
 .section-title p {
   margin: 10px 0 0;
   color: var(--ink-soft);
@@ -252,6 +258,13 @@ h1 {
 }
 
 .mnemonic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.strategy-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
@@ -286,6 +299,74 @@ h1 {
   margin: 10px 0 0;
   color: var(--ink-soft);
   line-height: 1.75;
+}
+
+.strategy-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(255, 248, 239, 0.84);
+  border: 1px solid rgba(23, 50, 77, 0.08);
+}
+
+.strategy-card--accent {
+  background:
+    radial-gradient(circle at top left, rgba(188, 90, 72, 0.12), transparent 25%),
+    linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(240, 231, 220, 0.92));
+}
+
+.strategy-card h3 {
+  font-size: 1rem;
+  color: var(--navy);
+}
+
+.strategy-card p {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+
+.strategy-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin-top: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(44, 107, 116, 0.12);
+  color: var(--navy);
+  font-size: 0.82rem;
+}
+
+.strategy-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+  line-height: 1.8;
+}
+
+.strategy-mini {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(23, 50, 77, 0.06);
+}
+
+.strategy-mini strong {
+  display: block;
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+.strategy-mini p {
+  margin-top: 8px;
+}
+
+.hook-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .group-block + .group-block {
@@ -562,6 +643,7 @@ h1 {
   .summary-strip,
   .quick-notes,
   .mnemonic-grid,
+  .strategy-grid,
   .control-panel {
     grid-template-columns: 1fr;
     display: grid;
