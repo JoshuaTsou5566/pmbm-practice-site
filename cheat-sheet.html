@@ -24,6 +24,44 @@
       </header>
 
       <main>
+        <section class="sync-panel">
+          <article class="sync-card">
+            <div class="sync-head">
+              <div>
+                <p class="eyebrow">Cloud Sync</p>
+                <h2>跨裝置同步</h2>
+              </div>
+              <span class="sync-badge" id="sync-badge">未設定</span>
+            </div>
+
+            <p class="sync-text" id="sync-text">
+              先填入 Supabase 設定後，就能用同一組帳號在手機和電腦同步你的回答。
+            </p>
+
+            <div class="auth-grid">
+              <label class="auth-field">
+                <span>Email</span>
+                <input id="auth-email" type="email" placeholder="you@example.com" />
+              </label>
+
+              <label class="auth-field">
+                <span>Password</span>
+                <input id="auth-password" type="password" placeholder="至少 6 碼" />
+              </label>
+            </div>
+
+            <div class="auth-actions">
+              <button class="primary-btn" id="auth-signup" type="button">註冊</button>
+              <button class="ghost-btn" id="auth-signin" type="button">登入</button>
+              <button class="ghost-btn" id="auth-signout" type="button">登出</button>
+            </div>
+
+            <div class="setup-notice" id="setup-notice">
+              目前尚未填入 Supabase `url` 和 `anonKey`，所以還不能跨裝置同步。
+            </div>
+          </article>
+        </section>
+
         <section class="summary-strip">
           <article class="summary-card">
             <span>總題數</span>
@@ -96,7 +134,9 @@
       </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./question-data.js"></script>
+    <script src="./supabase-config.js"></script>
     <script src="./cheat-sheet.js"></script>
   </body>
 </html>

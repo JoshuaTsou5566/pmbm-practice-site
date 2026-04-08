@@ -115,7 +115,8 @@ h1 {
 }
 
 .summary-strip,
-.quick-notes {
+.quick-notes,
+.auth-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
@@ -126,8 +127,14 @@ h1 {
   grid-template-columns: 1.1fr 0.9fr;
 }
 
+.auth-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
 .summary-card,
 .control-panel,
+.sync-card,
 .save-hint,
 .note-card,
 .sheet-card {
@@ -166,6 +173,86 @@ h1 {
   align-items: end;
   margin-top: 18px;
   padding: 18px;
+}
+
+.sync-panel {
+  margin-top: 22px;
+}
+
+.sync-card {
+  padding: 20px;
+}
+
+.sync-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.sync-text {
+  margin: 14px 0 0;
+  color: var(--ink-soft);
+  line-height: 1.76;
+}
+
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(191, 127, 47, 0.16);
+  color: #7c4f13;
+  font-size: 0.84rem;
+}
+
+.sync-badge.is-ready {
+  background: rgba(44, 107, 116, 0.14);
+  color: var(--navy);
+}
+
+.sync-badge.is-live {
+  background: rgba(44, 107, 116, 0.2);
+  color: var(--navy);
+}
+
+.auth-field {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-field span {
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+.auth-field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(23, 50, 77, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--ink);
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.setup-notice {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 248, 239, 0.82);
+  border: 1px solid rgba(23, 50, 77, 0.08);
+  color: var(--ink-soft);
+  line-height: 1.72;
 }
 
 .save-hint {
@@ -357,9 +444,20 @@ h1 {
   border-color: rgba(44, 107, 116, 0.28);
 }
 
-.save-status {
+.save-status,
+.save-status-row {
   color: var(--ink-soft);
   font-size: 0.84rem;
+}
+
+.answer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.save-status-row {
+  margin-top: -2px;
 }
 
 .empty-state {
@@ -375,7 +473,8 @@ h1 {
   .hero,
   .summary-strip,
   .quick-notes,
-  .control-panel {
+  .control-panel,
+  .auth-grid {
     grid-template-columns: 1fr;
     display: grid;
   }
@@ -400,7 +499,9 @@ h1 {
   }
 
   .hero-actions,
-  .action-row {
+  .action-row,
+  .auth-actions,
+  .answer-actions {
     display: grid;
     grid-template-columns: 1fr;
   }
