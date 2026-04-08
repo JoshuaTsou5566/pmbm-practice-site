@@ -171,6 +171,7 @@ function renderList() {
           </div>
           <h3>${item.id}. ${item.prompt}</h3>
           <p>${item.answerType}</p>
+          <div class="hint-row"></div>
         </div>
         <span class="sheet-arrow">+</span>
       </summary>
@@ -206,10 +207,16 @@ function renderList() {
     `;
 
     const keyPoints = details.querySelector(".key-points");
+    const hintRow = details.querySelector(".hint-row");
     item.keyPoints.forEach((point) => {
       const li = document.createElement("li");
       li.textContent = point;
       keyPoints.append(li);
+
+      const hint = document.createElement("span");
+      hint.className = "hint-chip";
+      hint.textContent = point;
+      hintRow.append(hint);
     });
 
     const followupGrid = details.querySelector(".followup-grid");

@@ -317,6 +317,25 @@ h1 {
   line-height: 1.72;
 }
 
+.hint-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hint-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 248, 239, 0.92);
+  border: 1px solid rgba(23, 50, 77, 0.08);
+  color: var(--navy);
+  font-size: 0.82rem;
+}
+
 .pill-row {
   display: flex;
   flex-wrap: wrap;
