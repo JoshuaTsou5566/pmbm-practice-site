@@ -297,6 +297,8 @@ h1 {
   padding: 20px 22px;
   cursor: pointer;
   list-style: none;
+  position: relative;
+  z-index: 1;
 }
 
 .sheet-summary::-webkit-details-marker {
@@ -346,6 +348,8 @@ h1 {
 
 .sheet-body {
   padding: 0 22px 22px;
+  position: relative;
+  z-index: 2;
 }
 
 .section-block + .section-block {
@@ -410,6 +414,9 @@ h1 {
   color: var(--ink);
   line-height: 1.72;
   resize: vertical;
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
 }
 
 .answer-editor textarea:focus {
@@ -427,6 +434,8 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  position: relative;
+  z-index: 3;
 }
 
 .save-status-row {

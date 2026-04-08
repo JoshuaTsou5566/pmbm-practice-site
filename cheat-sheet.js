@@ -226,12 +226,24 @@ function renderList() {
 
     const textarea = details.querySelector(`[data-answer-id="${item.id}"]`);
     textarea.value = state.answers[item.id] || "";
+    textarea.addEventListener("click", (event) => {
+      event.stopPropagation();
+      details.open = true;
+    });
+    textarea.addEventListener("focus", () => {
+      details.open = true;
+    });
+    textarea.addEventListener("keydown", (event) => {
+      event.stopPropagation();
+    });
 
-    details.querySelector(`[data-save-id="${item.id}"]`).addEventListener("click", () => {
+    details.querySelector(`[data-save-id="${item.id}"]`).addEventListener("click", (event) => {
+      event.stopPropagation();
       saveAnswer(item.id);
     });
 
-    details.querySelector(`[data-delete-id="${item.id}"]`).addEventListener("click", () => {
+    details.querySelector(`[data-delete-id="${item.id}"]`).addEventListener("click", (event) => {
+      event.stopPropagation();
       deleteAnswer(item.id);
     });
 
